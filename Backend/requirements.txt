@@ -1,0 +1,18 @@
+# Core
+Django>=5.0,<6.0
+psycopg2-binary>=2.9.9
+python-dotenv>=1.0.0
+django-environ>=0.11.2
+
+# Task scheduling & background jobs (reminders, smart-skip, review mode)
+celery[redis]>=5.3.0
+django-celery-beat>=2.6.0
+redis>=5.0.0
+
+# Email (can swap provider later)
+django-anymail[mailgun,sendgrid]>=10.0  # optional; start with console backend
+
+# Utilities
+Pillow>=10.0.0          # for any future image needs
+python-dateutil>=2.8.2  # recurrence calculations
+pytz>=2024.1
