@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Profile · prov-prod{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h1>Profile & preferences</h1>
+  <p class="subtitle">{{ user.username }} · used by review emails later</p>
+</section>
+
+<form method="post" class="card form-card">
+  {% csrf_token %}
+
+  <div class="field">
+    <label for="id_timezone">Timezone</label>
+    <input type="text" name="timezone" id="id_timezone" class="form-control"
+           value="{{ profile.timezone }}" placeholder="e.g. Africa/Lagos">
+    <small class="help">IANA name. Affects “today” for review & streak.</small>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="id_daily_review_time">Daily review time</label>
+      <input type="time" name="daily_review_time" id="id_daily_review_time" class="form-control"
+             value="{{ profile.daily_review_time|time:'H:i' }}">
+    </div>
+    <div class="field">
+      <label for="id_weekly_review_weekday">Weekly review day</label>
+      <select name="weekly_review_weekday" id="id_weekly_review_weekday" class="form-select">
+        {% for val, label in weekday_choices %}
+        <option value="{{ val }}" {% if profile.weekly_review_weekday == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn primary">Save preferences</button>
+  </div>
+</form>
+{% endblock %}

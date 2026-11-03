@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Login · prov-prod{% endblock %}
+
+{% block content %}
+<section class="auth-card card">
+  <h1>Login</h1>
+  <p class="subtitle">Temporary UI – use any account you created.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="msg msg-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="field">
+      <label for="id_username">Username</label>
+      <input type="text" name="username" id="id_username" class="form-control" autofocus required>
+    </div>
+    <div class="field">
+      <label for="id_password">Password</label>
+      <input type="password" name="password" id="id_password" class="form-control" required>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn primary">Log in</button>
+    </div>
+  </form>
+
+  <p class="muted">No account? <a href="{% url 'register' %}">Register</a></p>
+</section>
+{% endblock %}

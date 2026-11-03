@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Review · prov-prod{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Review</h1>
+    <p class="subtitle">{{ label }}</p>
+  </div>
+  <div class="btn-group">
+    <a class="btn {% if period == 'day' %}primary{% endif %}" href="?period=day">Day</a>
+    <a class="btn {% if period == 'week' %}primary{% endif %}" href="?period=week">Week</a>
+  </div>
+</section>
+
+<div class="stats-row">
+  <div class="stat card">
+    <div class="stat-value">{{ total_done }}</div>
+    <div class="stat-label">Completions logged</div>
+  </div>
+  <div class="stat card">
+    <div class="stat-value">{{ completed_tasks|length }}</div>
+    <div class="stat-label">Tasks finished</div>
+  </div>
+  <div class="stat card">
+    <div class="stat-value">{{ still_open|length }}</div>
+    <div class="stat-label">Still open (sample)</div>
+  </div>
+</div>
+
+<section class="card">
+  <h2>Completed this period</h2>
+  {% if completed_tasks %}
+  <ul class="simple-list">
+    {% for t in completed_tasks %}
+    <li>
+      <strong>{{ t.title }}</strong>
+      <span class="muted">· finished {{ t.completed_at|date:"D H:i" }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Nothing completed in this window yet.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Still open</h2>
+  {% if still_open %}
+  <ul class="simple-list">
+    {% for t in still_open %}
+    <li>
+      <a href="{% url 'task_edit' t.pk %}">{{ t.title }}</a>
+      <span class="muted">· due {{ t.expected_completion|date:"M j H:i" }}</span>
+      {% if t.is_overdue %}<span class="pill danger">overdue</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Inbox zero — nice.</p>
+  {% endif %}
+</section>
+
+{% if logs %}
+<section class="card">
+  <h2>Daily roll-up (CompletionLog)</h2>
+  <table class="table">
+    <thead>
+      <tr><th>Date</th><th>Completed</th></tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.date|date:"D, M j" }}</td>
+        <td>{{ log.completed_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

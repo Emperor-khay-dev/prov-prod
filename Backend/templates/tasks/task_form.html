@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · prov-prod{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <h1>{{ title }}</h1>
+</section>
+
+<form method="post" class="card form-card">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="msg msg-error">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <div class="field">
+    <label for="{{ form.title.id_for_label }}">Title</label>
+    {{ form.title }}
+    {{ form.title.errors }}
+  </div>
+
+  <div class="field">
+    <label for="{{ form.description.id_for_label }}">Description</label>
+    {{ form.description }}
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="{{ form.expected_completion.id_for_label }}">Expected completion</label>
+      {{ form.expected_completion }}
+      {{ form.expected_completion.errors }}
+      <small class="help">When you intend to finish.</small>
+    </div>
+    <div class="field">
+      <label for="{{ form.reminder_preset.id_for_label }}">Reminder</label>
+      {{ form.reminder_preset }}
+      <small class="help">Email reminder relative to due time.</small>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="{{ form.energy.id_for_label }}">Energy</label>
+      {{ form.energy }}
+    </div>
+    <div class="field">
+      <label for="{{ form.priority.id_for_label }}">Priority</label>
+      {{ form.priority }}
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="{{ form.recurrence.id_for_label }}">Recurrence</label>
+      {{ form.recurrence }}
+    </div>
+    <div class="field">
+      <label for="{{ form.recurrence_weekdays.id_for_label }}">Weekdays (optional)</label>
+      {{ form.recurrence_weekdays }}
+      {{ form.recurrence_weekdays.errors }}
+      <small class="help">0=Mon … 6=Sun, comma-separated. Used for weekly rules later.</small>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn primary">{{ submit_label }}</button>
+    <a href="{% url 'task_list' %}" class="btn muted">Cancel</a>
+  </div>
+</form>
+{% endblock %}

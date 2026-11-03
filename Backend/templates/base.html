@@ -1,0 +1,12 @@
+{% load static %}
+prov-prod temp UI
+{% if user.is_authenticated %}
+Tasks + New Review Streak {{ user.username }} Logout
+{% endif %}
+{% if messages %}
+{% for message in messages %}
+{{ message }}
+{% endfor %}
+{% endif %}
+{% block content %}{% endblock %}
+Temporary Django templates · backend test harness · React coming later

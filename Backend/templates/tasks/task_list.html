@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks · prov-prod{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Tasks</h1>
+    <p class="subtitle">
+      {{ open_count }} open
+      {% if overdue_count %}<span class="pill danger">{{ overdue_count }} overdue</span>{% endif %}
+      · {{ today_done }} done today
+    </p>
+  </div>
+  <a class="btn primary" href="{% url 'task_create' %}">+ New task</a>
+</section>
+
+{# Focus-mode filters #}
+<form method="get" class="filters card">
+  <div class="filter-row">
+    <label>
+      Energy
+      {{ filter_form.energy }}
+    </label>
+    <label>
+      Priority
+      {{ filter_form.priority }}
+    </label>
+    <label>
+      Show
+      {{ filter_form.show }}
+    </label>
+    <button type="submit" class="btn">Apply focus</button>
+    <a href="{% url 'task_list' %}" class="btn muted">Reset</a>
+  </div>
+</form>
+
+{% if tasks %}
+<ul class="task-list">
+  {% for task in tasks %}
+  <li class="task-card {% if task.is_completed %}done{% elif task.is_overdue %}overdue{% endif %}">
+    <div class="task-main">
+      <div class="task-title-row">
+        {% if task.is_completed %}
+          <span class="check done">✓</span>
+        {% else %}
+          <span class="check">○</span>
+        {% endif %}
+        <strong class="title">{{ task.title }}</strong>
+        {% if task.recurrence != 'none' %}
+          <span class="pill">↻ {{ task.get_recurrence_display }}</span>
+        {% endif %}
+      </div>
+
+      {% if task.description %}
+      <p class="desc">{{ task.description|truncatechars:120 }}</p>
+      {% endif %}
+
+      <div class="meta">
+        <span title="Expected completion">
+          Due {{ task.expected_completion|date:"D, M j · H:i" }}
+          {% if task.is_overdue and not task.is_completed %}<em class="danger">overdue</em>{% endif %}
+        </span>
+        <span class="pill energy-{{ task.energy }}">{{ task.get_energy_display }} energy</span>
+        <span class="pill priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+        {% if task.reminder_at %}
+        <span title="Reminder">🔔 {{ task.reminder_at|date:"M j H:i" }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="task-actions">
+      {% if not task.is_completed %}
+        <form method="post" action="{% url 'task_complete' task.pk %}">{% csrf_token %}
+          <button type="submit" class="btn small success">Complete</button>
+        </form>
+        {% if task.recurrence != 'none' %}
+        <form method="post" action="{% url 'task_smart_skip' task.pk %}">{% csrf_token %}
+          <button type="submit" class="btn small" title="Advance due date without stacking">Smart skip</button>
+        </form>
+        {% endif %}
+      {% else %}
+        <form method="post" action="{% url 'task_reopen' task.pk %}">{% csrf_token %}
+          <button type="submit" class="btn small">Reopen</button>
+        </form>
+      {% endif %}
+      <a class="btn small" href="{% url 'task_edit' task.pk %}">Edit</a>
+      <form method="post" action="{% url 'task_delete' task.pk %}" onsubmit="return confirm('Delete this task?');">{% csrf_token %}
+        <button type="submit" class="btn small danger">Delete</button>
+      </form>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty card">
+  <p>No tasks match these filters.</p>
+  <a class="btn primary" href="{% url 'task_create' %}">Create your first task</a>
+</div>
+{% endif %}
+{% endblock %}

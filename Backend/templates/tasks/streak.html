@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Streak · prov-prod{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Streak & heat-map</h1>
+    <p class="subtitle">Last {{ days }} days · {{ start|date:"M j" }} – {{ end|date:"M j, Y" }}</p>
+  </div>
+</section>
+
+<div class="stats-row">
+  <div class="stat card">
+    <div class="stat-value">{{ streak_count }}</div>
+    <div class="stat-label">Current streak (days)</div>
+  </div>
+  <div class="stat card">
+    <div class="stat-value">{{ total_completions }}</div>
+    <div class="stat-label">Total completions</div>
+  </div>
+</div>
+
+<section class="card">
+  <h2>Activity heat-map</h2>
+  <p class="help">Each cell = one day. Darker = more completions (from CompletionLog).</p>
+
+  <div class="heatmap" title="Hover a cell for the date and count">
+    {% for cell in cells %}
+    <div
+      class="hm-cell level-{{ cell.level }}"
+      title="{{ cell.date|date:'Y-m-d' }}: {{ cell.count }} completed"
+    ></div>
+    {% endfor %}
+  </div>
+
+  <div class="hm-legend">
+    <span>Less</span>
+    <span class="hm-cell level-0"></span>
+    <span class="hm-cell level-1"></span>
+    <span class="hm-cell level-2"></span>
+    <span class="hm-cell level-3"></span>
+    <span class="hm-cell level-4"></span>
+    <span>More</span>
+  </div>
+</section>
+
+<p class="muted">
+  Data source: <code>CompletionLog</code> rows written when you mark tasks complete
+  (or reopen). This is the same table the future email review digests will use.
+</p>
+{% endblock %}
