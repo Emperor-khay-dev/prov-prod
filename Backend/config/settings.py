@@ -9,6 +9,8 @@ Designed for growth:
 """
 
 from pathlib import Path
+from datetime import timedelta as _td #noqa: E402
+from celery.schedules import crontab  # noqa: E402
 import environ
 import os
 
@@ -46,8 +48,8 @@ INSTALLED_APPS = [
     'django_celery_beat',   # periodic tasks (reminders, review mode, smart-skip)
 
     # Local apps
-    'accounts',
-    'tasks',
+    'accounts.apps.AccountsConfig',
+    'tasks.apps.TasksConfig',
 ]
 
 MIDDLEWARE = [
@@ -166,18 +168,50 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+# Fallback periodic schedule (also create matching PeriodicTask rows in admin
+# when using DatabaseScheduler in production).
+
+
+CELERY_BEAT_SCHEDULE = {
+    # Check for due reminder emails every 5 minutes
+    'send-due-reminders': {
+        'task': 'tasks.send_due_reminders',
+        'schedule': 300.0,  # seconds
+    },
+    # Advance overdue recurring tasks every 15 minutes
+    'run-smart-skip': {
+        'task': 'tasks.run_smart_skip',
+        'schedule': 900.0,
+    },
+     # Escalate priority / refresh reminder_at as due dates approach
+    'recompute-priorities': {
+        'task': 'tasks.recompute_priorities',
+        'schedule': 900.0,
+    },
+    # Daily review window check every 15 minutes
+    'send-daily-reviews': {
+        'task': 'tasks.send_daily_reviews',
+        'schedule': 900.0,
+    },
+    # Weekly reviews once a day at 08:00 (task itself filters by weekday)
+    'send-weekly-reviews': {
+        'task': 'tasks.send_weekly_reviews',
+        'schedule': crontab(hour=8, minute=0),
+    },
+}
+
 # ---------------------------------------------------------------------------
 # Custom settings for prov-prod
 # ---------------------------------------------------------------------------
 # How many days of completion history to keep for the streak heat-map
 STREAK_HISTORY_DAYS = 90
 
-# Default reminder presets (minutes before due)
-REMINDER_PRESETS = {
-    'at_due': 0,
-    '15_min_before': 15,
-    '1_hour_before': 60,
-    '2_hours_before': 120,
-    'morning_of': 'morning',   # special handling
-    '1_day_before': 1440,
+# Reminder lead time by priority (v1 algorithm - no user presets).
+# Priority itself is dedrived from time until expected_completion:
+# Urgent ≤ 24 h (or overdue) | High ≤ 2d | Medium ≤ 5d | Low > 5d 
+PRIORITY_REMINDER_OFFSETS = {
+    'urgent': _td(hours=2),
+    'high': _td(hours=12),
+    'medium': _td(hours=24),
+    'low': _td(hours=48),  
 }

@@ -207,7 +207,7 @@ class Task(models.Model):
         return from_dt
 
 
-class CompletionLog(models.Model):
+class  CompletionLog(models.Model):
     """
     Lightweight daily roll-up used by the streak heat-map and Review mode.
     One row per user per calendar day.

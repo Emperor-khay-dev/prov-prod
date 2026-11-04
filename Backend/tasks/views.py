@@ -5,50 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.conf import settings
+
+from Backend.config import settings
 
 from .forms import FocusFilterForm, TaskForm
 from .models import CompletionLog, Task
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _apply_reminder_preset(task: Task) -> None:
-    """
-    Compute reminder_at from the chosen preset + expected_completion.
-    Mirrors the logic that a Celery job will eventually own.
-    """
-    preset = task.reminder_preset
-    if not preset or preset not in settings.REMINDER_PRESETS:
-        task.reminder_at = None
-        return
-
-    value = settings.REMINDER_PRESETS[preset]
-    due = task.expected_completion
-
-    if value == 'morning':
-        # 08:00 on the same calendar day as expected_completion
-        task.reminder_at = due.replace(hour=8, minute=0, second=0, microsecond=0)
-        if task.reminder_at >= due:
-            # already past morning → day before at 08:00
-            task.reminder_at = task.reminder_at - timedelta(days=1)
-    else:
-        # value is minutes before due
-        task.reminder_at = due - timedelta(minutes=int(value))
-
-
-def _bump_completion_log(user, delta: int = 1) -> None:
-    """Increment today's CompletionLog.completed_count (creates row if needed)."""
-    today = timezone.localdate()
-    log, _ = CompletionLog.objects.get_or_create(
-        user=user,
-        date=today,
-        defaults={'completed_count': 0, 'created_count': 0},
-    )
-    log.completed_count = max(0, log.completed_count + delta)
-    log.save(update_fields=['completed_count'])
 
 
 # ---------------------------------------------------------------------------
@@ -59,17 +20,18 @@ def _bump_completion_log(user, delta: int = 1) -> None:
 def task_list(request):
     """
     Main dashboard.
-    Supports Focus-mode filters (energy, priority, open/completed/overdue).
+    Focus-mode filters: effort + priority + open/completed/overdue.
+    Priority is algorithm-owned; effort is user-chosen.
     """
     form = FocusFilterForm(request.GET or None)
     qs = Task.objects.filter(user=request.user)
 
-    energy = request.GET.get('energy', '')
+    effort = request.GET.get('effort', '')
     priority = request.GET.get('priority', '')
     show = request.GET.get('show', 'open')
 
-    if energy:
-        qs = qs.filter(energy=energy)
+    if effort:
+        qs = qs.filter(effort=effort)
     if priority:
         qs = qs.filter(priority=priority)
 
@@ -116,9 +78,13 @@ def task_create(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
-            _apply_reminder_preset(task)
+            # priority + reminder_at set inside Task.save()
             task.save()
-            messages.success(request, f'Task “{task.title}” created.')
+            rem = (
+                f' . reminder {task.reminder_at:%Y-%m-%d %H:%M}'
+                if task.reminder_at else ''
+            )
+            messages.success(request, f'Task “{task.title}” created · priority {task.get_priority_display()}{rem}.')
             return redirect('task_list')
     else:
         form = TaskForm()
@@ -138,9 +104,9 @@ def task_edit(request, pk):
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             task = form.save(commit=False)
-            _apply_reminder_preset(task)
+            # priority + reminder_at set inside Task.save()
             task.save()
-            messages.success(request, f'Task “{task.title}” updated.')
+            messages.success(request, f'Task “{task.title}” updated ')
             return redirect('task_list')
     else:
         # Format for datetime-local input
@@ -169,8 +135,7 @@ def task_complete(request, pk):
 
     task = get_object_or_404(Task, pk=pk, user=request.user)
     if not task.is_completed:
-        task.mark_complete()
-        _bump_completion_log(request.user, +1)
+        task.mark_complete() # signals keep CompletionLog in sync
         messages.success(request, f'Completed “{task.title}”.')
         if task.recurrence != Task.Recurrence.NONE:
             messages.info(request, 'Next occurrence was scheduled (recurring task).')
@@ -187,7 +152,7 @@ def task_reopen(request, pk):
         task.is_completed = False
         task.completed_at = None
         task.save(update_fields=['is_completed', 'completed_at', 'updated_at'])
-        _bump_completion_log(request.user, -1)
+        # signals keep CompletionLog in sync
         messages.info(request, f'Reopened “{task.title}”.')
     return redirect('task_list')
 
