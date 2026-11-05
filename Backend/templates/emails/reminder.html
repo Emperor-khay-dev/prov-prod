@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Reminder</title></head>
+<body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a;">
+  <p>Hi {{ user.username }},</p>
+  <p>This is your reminder for:</p>
+  <h2 style="margin: 0.5rem 0;">{{ task.title }}</h2>
+  <p style="color: #555;">
+    Expected completion: <strong>{{ due|date:"D, M j · H:i" }}</strong>
+  </p>
+  {% if task.description %}
+  <p style="color: #555; white-space: pre-wrap;">{{ task.description }}</p>
+  {% endif %}
+  <hr style="border: none; border-top: 1px solid #ddd; margin: 1.5rem 0;">
+  <p style="font-size: 0.85rem; color: #888;">prov-prod · personal productivity</p>
+</body>
+</html>

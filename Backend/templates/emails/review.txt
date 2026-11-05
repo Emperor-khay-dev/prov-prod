@@ -1,0 +1,29 @@
+Hi {{ user.username }},
+
+{% if period == 'week' %}
+Weekly review · week of {{ week_start|date:"M j" }}
+{% else %}
+Daily review · {{ date|date:"D, M j" }}
+{% endif %}
+
+Completions logged: {{ completed_count }}
+
+{% if completed_today %}
+Finished:
+{% for t in completed_today %}
+  • {{ t.title }}
+{% endfor %}
+{% else %}
+No tasks finished in this window.
+{% endif %}
+
+{% if still_open %}
+Still open:
+{% for t in still_open %}
+  • {{ t.title }} (due {{ t.expected_completion|date:"M j H:i" }})
+{% endfor %}
+{% else %}
+Inbox zero — nice work.
+{% endif %}
+
+— prov-prod

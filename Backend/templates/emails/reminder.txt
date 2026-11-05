@@ -1,0 +1,14 @@
+Hi {{ user.username }},
+
+This is your reminder for:
+
+  {{ task.title }}
+
+Expected completion: {{ due|date:"D, M j · H:i" }}
+{% if task.description %}
+
+Notes:
+{{ task.description }}
+{% endif %}
+
+— prov-prod

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Review</title></head>
+<body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a;">
+  <p>Hi {{ user.username }},</p>
+
+  <h2 style="margin: 0.4rem 0;">
+    {% if period == 'week' %}
+      Weekly review · week of {{ week_start|date:"M j" }}
+    {% else %}
+      Daily review · {{ date|date:"D, M j" }}
+    {% endif %}
+  </h2>
+
+  <p>Completions logged: <strong>{{ completed_count }}</strong></p>
+
+  {% if completed_today %}
+  <h3 style="margin-bottom: 0.3rem;">Finished</h3>
+  <ul>
+    {% for t in completed_today %}
+    <li>{{ t.title }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color: #666;">No tasks finished in this window.</p>
+  {% endif %}
+
+  {% if still_open %}
+  <h3 style="margin-bottom: 0.3rem;">Still open</h3>
+  <ul>
+    {% for t in still_open %}
+    <li>
+      {{ t.title }}
+      <span style="color: #666;">(due {{ t.expected_completion|date:"M j H:i" }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color: #166534;">Inbox zero — nice work.</p>
+  {% endif %}
+
+  <hr style="border: none; border-top: 1px solid #ddd; margin: 1.5rem 0;">
+  <p style="font-size: 0.85rem; color: #888;">prov-prod · personal productivity</p>
+</body>
+</html>
