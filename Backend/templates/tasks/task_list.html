@@ -15,12 +15,11 @@
   <a class="btn primary" href="{% url 'task_create' %}">+ New task</a>
 </section>
 
-{# Focus-mode filters #}
 <form method="get" class="filters card">
   <div class="filter-row">
     <label>
-      Energy
-      {{ filter_form.energy }}
+      Effort
+      {{ filter_form.effort }}
     </label>
     <label>
       Priority
@@ -61,10 +60,10 @@
           Due {{ task.expected_completion|date:"D, M j · H:i" }}
           {% if task.is_overdue and not task.is_completed %}<em class="danger">overdue</em>{% endif %}
         </span>
-        <span class="pill energy-{{ task.energy }}">{{ task.get_energy_display }} energy</span>
+        <span class="pill effort-{{ task.effort }}">{{ task.get_effort_display }} effort</span>
         <span class="pill priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
-        {% if task.reminder_at %}
-        <span title="Reminder">🔔 {{ task.reminder_at|date:"M j H:i" }}</span>
+        {% if task.reminder_at and not task.is_completed %}
+        <span title="Algorithm reminder">🔔 {{ task.reminder_at|date:"M j H:i" }}</span>
         {% endif %}
       </div>
     </div>

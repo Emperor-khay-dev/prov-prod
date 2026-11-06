@@ -1,12 +1,15 @@
+"""
+Temporary function-based views for the Django-template UI.
+These exist only to exercise the backend models and helpers before React.
+"""
+
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-
-from Backend.config import settings
 
 from .forms import FocusFilterForm, TaskForm
 from .models import CompletionLog, Task
@@ -45,7 +48,6 @@ def task_list(request):
 
     tasks = qs.select_related('parent_task')[:100]
 
-    # Quick stats for the header
     open_count = Task.objects.filter(user=request.user, is_completed=False).count()
     overdue_count = Task.objects.filter(
         user=request.user,
@@ -81,10 +83,13 @@ def task_create(request):
             # priority + reminder_at set inside Task.save()
             task.save()
             rem = (
-                f' . reminder {task.reminder_at:%Y-%m-%d %H:%M}'
+                f' · reminder {task.reminder_at:%Y-%m-%d %H:%M}'
                 if task.reminder_at else ''
             )
-            messages.success(request, f'Task “{task.title}” created · priority {task.get_priority_display()}{rem}.')
+            messages.success(
+                request,
+                f'Task “{task.title}” created · priority {task.get_priority_display()}{rem}',
+            )
             return redirect('task_list')
     else:
         form = TaskForm()
@@ -106,10 +111,9 @@ def task_edit(request, pk):
             task = form.save(commit=False)
             # priority + reminder_at set inside Task.save()
             task.save()
-            messages.success(request, f'Task “{task.title}” updated ')
+            messages.success(request, f'Task “{task.title}” updated.')
             return redirect('task_list')
     else:
-        # Format for datetime-local input
         initial = {}
         if task.expected_completion:
             initial['expected_completion'] = task.expected_completion.strftime('%Y-%m-%dT%H:%M')
@@ -135,7 +139,7 @@ def task_complete(request, pk):
 
     task = get_object_or_404(Task, pk=pk, user=request.user)
     if not task.is_completed:
-        task.mark_complete() # signals keep CompletionLog in sync
+        task.mark_complete()  # signals keep CompletionLog in sync
         messages.success(request, f'Completed “{task.title}”.')
         if task.recurrence != Task.Recurrence.NONE:
             messages.info(request, 'Next occurrence was scheduled (recurring task).')
@@ -265,12 +269,10 @@ def streak(request):
         )
     }
 
-    # Build a flat list of day cells for the template
     cells = []
     current = start
     while current <= end:
         count = logs.get(current, 0)
-        # intensity buckets for CSS
         if count == 0:
             level = 0
         elif count == 1:
@@ -288,7 +290,6 @@ def streak(request):
         })
         current += timedelta(days=1)
 
-    # Current streak (consecutive days with count > 0 ending today or yesterday)
     streak_count = 0
     check = end
     while check >= start:
@@ -296,7 +297,6 @@ def streak(request):
             streak_count += 1
             check -= timedelta(days=1)
         else:
-            # allow a 1-day gap only if we haven't started counting yet
             if streak_count == 0 and check == end:
                 check -= timedelta(days=1)
                 continue
@@ -312,4 +312,3 @@ def streak(request):
         'start': start,
         'end': end,
     })
-

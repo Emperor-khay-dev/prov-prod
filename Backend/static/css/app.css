@@ -262,10 +262,10 @@ input:focus, textarea:focus, select:focus {
   border: 1px solid var(--border);
 }
 .pill.danger { background: #7f1d1d44; color: #fca5a5; border-color: #ef444455; }
-.energy-low { border-color: #64748b88; }
-.energy-medium { border-color: #3b82f688; }
-.energy-high { border-color: #a855f788; color: #e9d5ff; }
-.priority-low { border-color: #64858b82; }
+.effort-low { border-color: #64748b88; }
+.effort-medium { border-color: #3b82f688; }
+.effort-high { border-color: #a855f788; color: #e9d5ff; }
+.priority-low { border-color: #64748b88; }
 .priority-medium { border-color: #3b82f688; }
 .priority-high { border-color: #f59e0b88; color: #fde68a; }
 .priority-urgent { border-color: #ef444488; color: #fca5a5; background: #7f1d1d33; }
@@ -341,3 +341,5 @@ code {
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
 }
+.readonly-value { margin: 0.25rem 0 0; font-size: 0.95rem; }
+.readonly-value { margin: 0.25rem 0 0; font-size: 0.95rem; }

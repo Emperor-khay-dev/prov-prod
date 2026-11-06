@@ -5,12 +5,15 @@ from .models import Task, CompletionLog
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'user', 'expected_completion', 'energy', 'priority',
+        'title', 'user', 'expected_completion', 'effort', 'priority',
         'is_completed', 'recurrence', 'reminder_at',
     )
-    list_filter = ('is_completed', 'energy', 'priority', 'recurrence')
+    list_filter = ('is_completed', 'effort', 'priority', 'recurrence')
     search_fields = ('title', 'description', 'user__username', 'user__email')
-    readonly_fields = ('created_at', 'updated_at', 'completed_at')
+    readonly_fields = (
+        'created_at', 'updated_at', 'completed_at',
+        'priority', 'reminder_at',  # algorithm-owned in v1
+    )
     date_hierarchy = 'expected_completion'
     ordering = ('-expected_completion',)
 

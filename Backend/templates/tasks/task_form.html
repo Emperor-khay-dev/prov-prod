@@ -30,25 +30,33 @@
       <label for="{{ form.expected_completion.id_for_label }}">Expected completion</label>
       {{ form.expected_completion }}
       {{ form.expected_completion.errors }}
-      <small class="help">When you intend to finish.</small>
+      <small class="help">
+        Priority is set automatically from this date
+        (≤24h Urgent · ≤2d High · ≤5d Medium · else Low).
+        Reminder time follows priority.
+      </small>
     </div>
     <div class="field">
-      <label for="{{ form.reminder_preset.id_for_label }}">Reminder</label>
-      {{ form.reminder_preset }}
-      <small class="help">Email reminder relative to due time.</small>
+      <label for="{{ form.effort.id_for_label }}">Effort</label>
+      {{ form.effort }}
+      <small class="help">Capacity this needs — used in Focus mode filters.</small>
     </div>
   </div>
 
+  {% if task %}
   <div class="field-row">
     <div class="field">
-      <label for="{{ form.energy.id_for_label }}">Energy</label>
-      {{ form.energy }}
+      <label>Priority (auto)</label>
+      <p class="readonly-value pill priority-{{ task.priority }}">{{ task.get_priority_display }}</p>
     </div>
     <div class="field">
-      <label for="{{ form.priority.id_for_label }}">Priority</label>
-      {{ form.priority }}
+      <label>Reminder (auto)</label>
+      <p class="readonly-value">
+        {% if task.reminder_at %}{{ task.reminder_at|date:"D, M j · H:i" }}{% else %}—{% endif %}
+      </p>
     </div>
   </div>
+  {% endif %}
 
   <div class="field-row">
     <div class="field">
@@ -59,7 +67,7 @@
       <label for="{{ form.recurrence_weekdays.id_for_label }}">Weekdays (optional)</label>
       {{ form.recurrence_weekdays }}
       {{ form.recurrence_weekdays.errors }}
-      <small class="help">0=Mon … 6=Sun, comma-separated. Used for weekly rules later.</small>
+      <small class="help">0=Mon … 6=Sun, comma-separated.</small>
     </div>
   </div>
 

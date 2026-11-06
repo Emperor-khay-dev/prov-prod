@@ -1,7 +1,10 @@
 """
 Forms for the temporary Django-template UI.
-These mirror the Task model fields so we can exercise every backend feature
-before the React frontend arrives.
+
+v1 rules:
+- Priority is auto-derived from expected_completion (not user-editable).
+- Reminder timing is algorithm-driven from priority (no preset picker).
+- Effort is user-chosen for Focus mode.
 """
 
 from datetime import timedelta
@@ -12,28 +15,16 @@ from .models import Task
 
 
 class TaskForm(forms.ModelForm):
-    """Create / edit a task. Covers all v1 fields."""
+    """Create / edit a task. Priority & reminder are computed on save."""
 
-    # Make expected_completion friendlier in the browser
     expected_completion = forms.DateTimeField(
         widget=forms.DateTimeInput(
             attrs={'type': 'datetime-local', 'class': 'form-control'},
             format='%Y-%m-%dT%H:%M',
         ),
         input_formats=['%Y-%m-%dT%H:%M'],
-        help_text='When you intend to finish this task.',
+        help_text='When you intend to finish. Priority and reminder follow from this.',
     )
-
-    # Explicit choices so the form stays in sync with settings.REMINDER_PRESETS
-    REMINDER_CHOICES = [
-        ('', '— no reminder —'),
-        ('at_due', 'At due time'),
-        ('15_min_before', '15 minutes before'),
-        ('1_hour_before', '1 hour before'),
-        ('2_hours_before', '2 hours before'),
-        ('morning_of', 'Morning of the day'),
-        ('1_day_before', '1 day before'),
-    ]
 
     class Meta:
         model = Task
@@ -41,9 +32,7 @@ class TaskForm(forms.ModelForm):
             'title',
             'description',
             'expected_completion',
-            'reminder_preset',
-            'energy',
-            'priority',
+            'effort',
             'recurrence',
             'recurrence_weekdays',
         ]
@@ -58,8 +47,7 @@ class TaskForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Optional notes…',
             }),
-            'energy': forms.Select(attrs={'class': 'form-select'}),
-            'priority': forms.Select(attrs={'class': 'form-select'}),
+            'effort': forms.Select(attrs={'class': 'form-select'}),
             'recurrence': forms.Select(attrs={'class': 'form-select'}),
             'recurrence_weekdays': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -68,22 +56,15 @@ class TaskForm(forms.ModelForm):
         }
         labels = {
             'expected_completion': 'Expected completion',
-            'reminder_preset': 'Reminder',
+            'effort': 'Effort',
             'recurrence_weekdays': 'Weekdays (for weekly rules)',
+        }
+        help_texts = {
+            'effort': 'How much capacity this needs — used in Focus mode.',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['reminder_preset'] = forms.ChoiceField(
-            choices=self.REMINDER_CHOICES,
-            required=False,
-            widget=forms.Select(attrs={'class': 'form-select'}),
-            label='Reminder',
-        )
-        # Keep existing value when editing
-        if self.instance and self.instance.pk and self.instance.reminder_preset:
-            self.fields['reminder_preset'].initial = self.instance.reminder_preset
-        # Default expected_completion to now + 1 hour for new tasks
         if not self.instance.pk and not self.data:
             default_dt = timezone.now() + timedelta(hours=1)
             self.fields['expected_completion'].initial = default_dt.strftime('%Y-%m-%dT%H:%M')
@@ -102,10 +83,10 @@ class TaskForm(forms.ModelForm):
 
 
 class FocusFilterForm(forms.Form):
-    """Simple filter for Focus mode on the task list."""
+    """Focus mode filters: effort + priority + status."""
 
-    energy = forms.ChoiceField(
-        choices=[('', 'Any energy')] + list(Task.Energy.choices),
+    effort = forms.ChoiceField(
+        choices=[('', 'Any effort')] + list(Task.Effort.choices),
         required=False,
         widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
     )
